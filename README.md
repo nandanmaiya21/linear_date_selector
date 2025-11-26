@@ -64,41 +64,76 @@ LinearDateSelector(
 );
 ```
 
-### Custom builder (full control)
+### 🧪 Custom builder (full control)
 
 Use `.builder` to get (context, date, isSelected, isDisabled, index, style) and return any widget:
 
 ```dart
 LinearDateSelector.builder(
-  todaysDateTime: DateTime.now(),
-  itemCount: 7,
-  disabledDateTimes: [DateTime.now().add(Duration(days: 2))],
-  onDateTimeSelected: (selected) {
-    // handle selection
-  },
-  itemBuilder: (context, date, isSelected, isDisabled, index, style) {
-    // return any widget; here's an example:
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8),
+  listPadding: const EdgeInsets.all(8),
+  startDateTime: DateTime.now(),
+  itemCount: 10,
+  itemHeight: 120,
+  axis: Axis.horizontal,
+  disabledDateTimes: [
+    DateTime.now().add(const Duration(days: 4)),
+  ],
+  onDateTimeSelected: (d) => print('selected $d'),
+  itemBuilder: (
+    context,
+    date,
+    isSelected,
+    isDisabled,
+    index,
+    _,
+  ) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
       decoration: BoxDecoration(
         color: isDisabled
-            ? Colors.grey.shade300
-            : isSelected
-                ? Colors.blue
-                : Colors.white,
+            ? Colors.grey.shade200
+            : (isSelected ? const Color(0xFF1e1405) : const Color(0xFFf8e9d7)),
         borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isDisabled
+              ? Colors.grey
+              : (isSelected ? const Color(0xFF1e1405) : const Color(0xFFf8e9d7)),
+        ),
       ),
-      alignment: Alignment.center,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(DateFormat('E').format(date)),
-          Text(DateFormat('dd').format(date)),
+          Center(
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: '${DateFormat('dd').format(date)}\n',
+                    style: const TextStyle(fontSize: 28),
+                  ),
+                  TextSpan(
+                    text: DateFormat('MMM\nyyyy').format(date),
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ],
+              ),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isDisabled
+                    ? Colors.grey
+                    : (isSelected
+                        ? const Color(0xFFf8e9d7)
+                        : const Color(0xFF1e1405)),
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
         ],
       ),
     );
   },
 );
+
 ```
 
 > **Note:** The `index` parameter corresponds to the tile's position (0 is `todaysDateTime`). Use it for special styling (e.g., first/last tile) or animations.
@@ -128,6 +163,7 @@ Important properties:
 - `scaleAnimationDuration` — duration for the tap-scale animation.
 - `enableColorAnimation` — enables background/text color animation for default tiles.
 - `backgroundColorChangeDuration`, `textColorChangeDuration` — durations for color animations (used by the default tile implementation).
+- `physics`, `controller` — optional `ScrollPhysics` and `ScrollController` for the list.
 
 - `itemBuilder` — `Widget Function(BuildContext context, DateTime date, bool isSelected, bool isDisabled, int index, DateSelectorStyle style)?` for fully-custom tile rendering.
 
@@ -153,7 +189,7 @@ class DateSelectorStyle {
 
 ```
 
-## Example: disabling dates
+## 🧪Example: disabling dates
 
 ```dart
 final today = DateTime.now();
@@ -171,7 +207,7 @@ LinearDateSelector(
 );
 ```
 
-## Accessibility & Tips
+## 🧠 Accessibility & Tips
 
 - Consider wrapping your custom builder tile in `Semantics` to expose `selected` / `disabled` to screen readers.
 
@@ -213,9 +249,9 @@ When contributing, please:
 
 ---
 
-## License
+## 🔖 License
 
-This package is distributed under the MIT [LICENSE](). See LICENSE for more information.
+This package is distributed under the MIT [LICENSE](https://github.com/nandanmaiya21/linear_date_selector/blob/main/LICENSE). See LICENSE for more information.
 
 ---
 

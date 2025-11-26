@@ -167,7 +167,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     itemHeight: 100,
                     enableClickAnimation: true,
                     enableColorAnimation: true,
-                    listPadding: EdgeInsets.all(8),
+                    // listPadding: EdgeInsets.all(8),
                     style: DateSelectorStyle(
                       selectedTextColor: Colors.blue,
                       selectedTileBackgroundColor: Colors.blue.shade50,
@@ -191,7 +191,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
             const SizedBox(height: 16),
             const Text(
-              "Custom Tiles",
+              "Custom Tiles (Horizontal)",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
@@ -200,13 +200,14 @@ class _MyHomePageState extends State<MyHomePage> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 SizedBox(
-                  width: 100,
-                  height: MediaQuery.sizeOf(context).height,
+                  width: MediaQuery.sizeOf(context).width,
+                  height: 120,
                   child: LinearDateSelector.builder(
+                    listPadding: EdgeInsets.all(8),
                     startDateTime: DateTime.now(),
                     itemCount: 10,
-                    itemHeight: 100,
-                    axis: Axis.vertical,
+                    itemHeight: 120,
+                    axis: Axis.horizontal,
                     disabledDateTimes: [DateTime.now().add(Duration(days: 4))],
                     onDateTimeSelected: (d) => print('selected $d'),
                     itemBuilder:
@@ -222,34 +223,165 @@ class _MyHomePageState extends State<MyHomePage> {
                             decoration: BoxDecoration(
                               color: isDisabled
                                   ? Colors.grey.shade200
-                                  : (isSelected ? Colors.green : Colors.white),
+                                  : (isSelected
+                                        ? Color(0xFF1e1405)
+                                        : Color(0xFFf8e9d7)),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
                                 color: isDisabled
                                     ? Colors.grey
                                     : (isSelected
-                                          ? Colors.green
-                                          : Colors.black12),
+                                          ? Color(0xFF1e1405)
+                                          : Color(0xFFf8e9d7)),
                               ),
                             ),
                             child: Column(
                               children: [
                                 Center(
-                                  child: Text(
-                                    DateFormat('E dd').format(date),
+                                  child: Text.rich(
+                                    TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text:
+                                              DateFormat('dd').format(date) +
+                                              '\n',
+                                          style: TextStyle(fontSize: 28),
+                                        ),
+                                        TextSpan(
+                                          text: DateFormat(
+                                            'MMM\nyyyy',
+                                          ).format(date),
+                                          style: TextStyle(fontSize: 14),
+                                        ),
+                                      ],
+                                    ),
+                                    textAlign: TextAlign.center,
                                     style: TextStyle(
                                       color: isDisabled
                                           ? Colors.grey
                                           : (isSelected
-                                                ? Colors.white
-                                                : Colors.black87),
+                                                ? Color(0xFFf8e9d7)
+                                                : Color(0xFF1e1405)),
                                       fontWeight: isSelected
                                           ? FontWeight.bold
                                           : FontWeight.normal,
                                     ),
                                   ),
                                 ),
-                                CircleAvatar(backgroundColor: Colors.red),
+                                // CircleAvatar(backgroundColor: Colors.red),
+                              ],
+                            ),
+                          );
+                        },
+                  ),
+               
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            const Text(
+              "Custom Tiles (Vertical)",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  width: MediaQuery.sizeOf(context).width,
+                  height: MediaQuery.sizeOf(context).height,
+                  child: LinearDateSelector.builder(
+                    // physics: NeverScrollableScrollPhysics(),
+                    style: DateSelectorStyle(
+                      tileBackgroundColor: Color(0xffcbbba2),
+                      selectedTileBackgroundColor: Color(0xff3b6856),
+                      selectedTextColor: Colors.white,
+                      disabledTextColor: Colors.grey,
+                      borderColor: Color(0xff91784e),
+                      selectedBorderColor: Color(0xff194232),
+                    ),
+                    startDateTime: DateTime.now(),
+                    itemCount: 10,
+                    itemHeight: 116,
+                    axis: Axis.vertical,
+                    disabledDateTimes: [DateTime.now().add(Duration(days: 4))],
+                    onDateTimeSelected: (d) => print('selected $d'),
+                    itemBuilder:
+                        (context, date, isSelected, isDisabled, index, style) {
+                          double _scale = 1.0;
+
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isDisabled
+                                  ? Colors.grey.shade200
+                                  : (isSelected
+                                        ? style.selectedTileBackgroundColor
+                                        : style.tileBackgroundColor),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: isDisabled
+                                    ? Colors.grey
+                                    : (isSelected
+                                          ? style.selectedBorderColor
+                                          : style.borderColor),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        DateFormat('dd').format(date),
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 24,
+                                          color: isDisabled
+                                              ? style.disabledTextColor
+                                              : isSelected
+                                              ? Colors.white
+                                              : Colors.black87,
+                                        ),
+                                      ),
+                                      Text(
+                                        DateFormat('MMMM').format(date),
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 16,
+                                          color: isDisabled
+                                              ? style.disabledTextColor
+                                              : isSelected
+                                              ? Colors.white
+                                              : Colors.black87,
+                                        ),
+                                      ),
+                                      Text(
+                                        DateFormat('yyyy').format(date),
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: isDisabled
+                                              ? style.disabledTextColor
+                                              : isSelected
+                                              ? Colors.white
+                                              : Colors.black87,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
                           );

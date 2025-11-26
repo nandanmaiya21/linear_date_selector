@@ -6,12 +6,12 @@ import 'package:intl/intl.dart';
 /// A customizable horizontal/vertical date selector widget for Flutter.
 ///
 /// This widget displays a sequential list of dates starting from a given
-/// `todaysDateTime`. It supports both **default UI tiles** and a
+/// `startDateTime`. It supports both **default UI tiles** and a
 /// **fully customizable builder** (similar to `ListView.builder`), allowing
 /// developers to design their own date tiles.
 ///
 /// ## Features
-/// - Auto-generated date list starting from `todaysDateTime`
+/// - Auto-generated date list starting from `startDateTime`
 /// - Horizontal or vertical scrolling using ListView
 /// - Customizable appearance via `DateSelectorStyle`
 /// - Ability to disable specific dates
@@ -27,7 +27,7 @@ import 'package:intl/intl.dart';
 ///
 /// ```dart
 /// LinearDateSelector.builder(
-///   todaysDateTime: DateTime.now(),
+///   startDateTime: DateTime.now(),
 ///   itemCount: 7,
 ///   disabledDateTimes: [...],
 ///   onDateTimeSelected: (date) {},
@@ -87,6 +87,8 @@ class LinearDateSelector extends StatefulWidget {
     this.backgroundColorChangeDuration = const Duration(milliseconds: 200),
     this.enableColorAnimation = false,
     this.scaleAnimationDuration = const Duration(milliseconds: 120),
+    this.physics,
+    this.controller,
   }) : itemBuilder = null,
        assert(itemCount > 0, 'itemCount must be greater than 0');
 
@@ -108,6 +110,8 @@ class LinearDateSelector extends StatefulWidget {
     this.listPadding = EdgeInsets.zero,
     this.enableClickAnimation = true,
     this.scaleAnimationDuration = const Duration(milliseconds: 120),
+    this.controller,
+    this.physics,
   }) : icon = null,
        iconAlignment = LinearDateSelectorIconAlignment.bottom,
        textColorChangeDuration = null,
@@ -202,6 +206,12 @@ class LinearDateSelector extends StatefulWidget {
   /// Only used when `enableClickAnimation` is true.
   final Duration? scaleAnimationDuration;
 
+  /// Optional physics for ListView.
+  final ScrollPhysics? physics;
+
+  /// Optional scroll controller for ListView.
+  final ScrollController? controller;
+
   /// Custom tile builder provided by the developer.
   ///
   /// Parameters give complete control:
@@ -266,6 +276,8 @@ class _LinearDateSelectorState extends State<LinearDateSelector> {
       padding: widget.listPadding,
       shrinkWrap: true,
       itemCount: widget.itemCount,
+      physics: widget.physics,
+      controller: widget.controller,
       scrollDirection: widget.axis,
       itemBuilder: (context, index) {
         final DateTime currElement = _dates[index];
