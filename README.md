@@ -1,8 +1,10 @@
-# linear_date_selector
+# linear_date_selector 🔗
 
 A lightweight, customizable horizontal/vertical date selector widget for Flutter.
 
 `linear_date_selector` provides a simple, robust UI for displaying a linear sequence of dates (e.g., today + next N days) with built-in selection, disabled-date support, animations, and a fully custom tile builder—similar to `ListView.builder`.
+
+[Link](https://linear-date-selector-web.vercel.app/)
 
 ---
 
