@@ -81,6 +81,12 @@ class LinearDateSelector extends StatefulWidget {
     this.itemHeight,
     this.icon,
     this.iconAlignment = LinearDateSelectorIconAlignment.bottom,
+    this.listPadding = EdgeInsets.zero,
+    this.enableClickAnimation = true,
+    this.textColorChangeDuration = const Duration(milliseconds: 200),
+    this.backgroundColorChangeDuration = const Duration(milliseconds: 200),
+    this.enableColorAnimation = false,
+    this.scaleAnimationDuration = const Duration(milliseconds: 120),
   }) : itemBuilder = null,
        assert(itemCount > 0, 'itemCount must be greater than 0');
 
@@ -98,10 +104,16 @@ class LinearDateSelector extends StatefulWidget {
     this.axis = Axis.horizontal,
     this.itemWidth,
     this.itemHeight,
-    this.icon,
-    this.iconAlignment = LinearDateSelectorIconAlignment.bottom,
     this.itemBuilder,
-  }) : assert(itemCount > 0, 'itemCount must be greater than 0');
+    this.listPadding = EdgeInsets.zero,
+    this.enableClickAnimation = true,
+    this.scaleAnimationDuration = const Duration(milliseconds: 120),
+  }) : icon = null,
+       iconAlignment = LinearDateSelectorIconAlignment.bottom,
+       textColorChangeDuration = null,
+       backgroundColorChangeDuration = null,
+       enableColorAnimation = false,
+       assert(itemCount > 0, 'itemCount must be greater than 0');
 
   /// Starting date from where the list begins.
   ///
@@ -150,6 +162,46 @@ class LinearDateSelector extends StatefulWidget {
   /// top, bottom, left, or right of the text.
   final LinearDateSelectorIconAlignment iconAlignment;
 
+  /// Padding applied around the scrollable list.
+  final EdgeInsets listPadding;
+
+  /// Enables the tap animation (scale-in → scale-out).
+  ///
+  /// Set to false for instant selection without animation.
+  final bool enableClickAnimation;
+
+  /// Duration for the background color animation of each tile.
+  ///
+  /// Applies only when using the default tile UI.
+  /// When a tile becomes selected/unselected/disabled, its background color
+  /// transitions smoothly over this duration.
+  ///
+  /// If you use the `.builder` constructor, this value is `null` because
+  /// background animation becomes the responsibility of your custom builder.
+  final Duration? backgroundColorChangeDuration;
+
+  /// Duration for animating text (and icon) color changes.
+  ///
+  /// Used by `AnimatedDefaultTextStyle` and icon color animation inside the
+  /// default tile UI. Ensures that text color fades smoothly when the tile's
+  /// state changes (normal → selected → disabled).
+  ///
+  /// This value is `null` in the `.builder` constructor because custom tiles
+  /// are expected to manage their own text animations.
+  final Duration? textColorChangeDuration;
+
+  /// When true, text & icon color changes (and background color) animate
+  /// using the configured durations. When false, color changes are instant.
+  ///
+  /// Defaults to `false` in your current constructors.
+  final bool enableColorAnimation;
+
+  /// Duration used for the scale (tap) animation when a tile is pressed.
+  ///
+  /// Controls how quickly the tile grows/shrinks during the click animation.
+  /// Only used when `enableClickAnimation` is true.
+  final Duration? scaleAnimationDuration;
+
   /// Custom tile builder provided by the developer.
   ///
   /// Parameters give complete control:
@@ -180,24 +232,48 @@ class _LinearDateSelectorState extends State<LinearDateSelector> {
   /// Defaults to -1 (meaning nothing selected yet).
   int selectedIndex = -1;
 
+  static final DateFormat _dayFmt = DateFormat('E');
+  static final DateFormat _dateFmt = DateFormat('dd');
+  static final DateFormat _monthFmt = DateFormat('MMM');
+
+  /// Precomputed list of consecutive dates shown by the selector.
+  ///
+  /// Built in `initState` (and refreshed in `didUpdateWidget` when inputs
+  /// change). Avoids recreating DateTime instances on every build.
+  late final List<DateTime> _dates;
+
+  /// Set of string keys for fast disabled-date lookup.
+  ///
+  /// Each key is `'yyyy-M-d'`. Using a Set makes `isDisabled` checks O(1).
+  late final Set<String> _disabledDateKeys;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _dates = List.generate(
+      widget.itemCount,
+      (i) => widget.todaysDateTime.add(Duration(days: i)),
+    );
+    _disabledDateKeys = widget.disabledDateTimes
+        .map((d) => '${d.year}-${d.month}-${d.day}')
+        .toSet();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      padding: EdgeInsets.zero,
+      padding: widget.listPadding,
       shrinkWrap: true,
       itemCount: widget.itemCount,
       scrollDirection: widget.axis,
       itemBuilder: (context, index) {
-        final DateTime currElement = widget.todaysDateTime.add(
-          Duration(days: index),
-        );
+        final DateTime currElement = _dates[index];
 
         /// Check if this date exists in the disabled list.
-        final bool isDisabled = widget.disabledDateTimes.any((element) {
-          return (element.day == currElement.day &&
-              element.month == currElement.month &&
-              element.year == currElement.year);
-        });
+        final bool isDisabled = _disabledDateKeys.contains(
+          '${currElement.year}-${currElement.month}-${currElement.day}',
+        );
 
         /// Whether this tile is currently selected.
         final bool isSelected = selectedIndex == index;
@@ -226,16 +302,17 @@ class _LinearDateSelectorState extends State<LinearDateSelector> {
           );
         }
 
-        return GestureDetector(
+        return _TapScale(
+          enabled: widget.enableClickAnimation,
+          scaleDuration: widget.scaleAnimationDuration!,
           onTap: () {
-            if (!isDisabled) {
-              setState(() {
-                selectedIndex = index;
-              });
-              widget.onDateTimeSelected(
-                widget.todaysDateTime.add(Duration(days: index)),
-              );
-            }
+            if (isDisabled) return;
+            setState(() {
+              selectedIndex = index;
+            });
+            widget.onDateTimeSelected(
+              widget.todaysDateTime.add(Duration(days: index)),
+            );
           },
           child: SizedBox(
             width: widget.itemWidth ?? 64,
@@ -255,11 +332,14 @@ class _LinearDateSelectorState extends State<LinearDateSelector> {
     bool isDisabled,
     int index,
   ) {
-    final String date = DateFormat('dd').format(currElement);
-    final String day = DateFormat('E').format(currElement);
-    final String month = DateFormat('MMM').format(currElement);
+    final String date = _dayFmt.format(currElement);
+    final String day = _dateFmt.format(currElement);
+    final String month = _monthFmt.format(currElement);
 
-    return Container(
+    return AnimatedContainer(
+      duration: widget.enableColorAnimation
+          ? widget.backgroundColorChangeDuration!
+          : Duration.zero,
       margin: EdgeInsets.symmetric(
         horizontal: widget.axis == Axis.horizontal ? 8 : 0,
         vertical: widget.axis == Axis.horizontal ? 0 : 8,
@@ -272,10 +352,10 @@ class _LinearDateSelectorState extends State<LinearDateSelector> {
             : widget.style.tileBackgroundColor,
         border: Border.all(
           color: isDisabled
-              ? widget.style.disabledBorderColor!
+              ? widget.style.disabledBorderColor
               : isSelected
-              ? widget.style.selectedBorderColor!
-              : widget.style.borderColor!,
+              ? widget.style.selectedBorderColor
+              : widget.style.borderColor,
         ),
         borderRadius: BorderRadius.circular(12),
       ),
@@ -318,8 +398,11 @@ class _LinearDateSelectorState extends State<LinearDateSelector> {
                     child: widget.icon!,
                   ),
                 ),
-              Text(
-                day,
+              //day text
+              AnimatedDefaultTextStyle(
+                duration: widget.enableColorAnimation
+                    ? widget.textColorChangeDuration!
+                    : Duration.zero,
                 style: TextStyle(
                   fontSize: 14,
                   color: isDisabled
@@ -328,10 +411,14 @@ class _LinearDateSelectorState extends State<LinearDateSelector> {
                       ? widget.style.selectedTextColor
                       : Colors.black,
                 ),
+                child: Text(day),
               ),
               const SizedBox(height: 2),
-              Text(
-                date,
+              //date text
+              AnimatedDefaultTextStyle(
+                duration: widget.enableColorAnimation
+                    ? widget.textColorChangeDuration!
+                    : Duration.zero,
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
@@ -341,10 +428,14 @@ class _LinearDateSelectorState extends State<LinearDateSelector> {
                       ? widget.style.selectedTextColor
                       : Colors.black,
                 ),
+                child: Text(date),
               ),
               const SizedBox(height: 2),
-              Text(
-                month,
+              //month text
+              AnimatedDefaultTextStyle(
+                duration: widget.enableColorAnimation
+                    ? widget.textColorChangeDuration!
+                    : Duration.zero,
                 style: TextStyle(
                   fontSize: 12,
                   color: isDisabled
@@ -353,6 +444,7 @@ class _LinearDateSelectorState extends State<LinearDateSelector> {
                       ? widget.style.selectedTextColor
                       : Colors.black,
                 ),
+                child: Text(month),
               ),
               if (widget.iconAlignment ==
                       LinearDateSelectorIconAlignment.bottom &&
@@ -398,28 +490,28 @@ class _LinearDateSelectorState extends State<LinearDateSelector> {
 /// Includes colors, paddings, borders, and text styles.
 class DateSelectorStyle {
   /// Background color for normal (unselected) tiles.
-  final Color? tileBackgroundColor;
+  final Color tileBackgroundColor;
 
   /// Background color for the selected tile.
-  final Color? selectedTileBackgroundColor;
+  final Color selectedTileBackgroundColor;
 
   /// Border color for normal tiles.
-  final Color? borderColor;
+  final Color borderColor;
 
   /// Border color for the selected tile.
-  final Color? selectedBorderColor;
+  final Color selectedBorderColor;
 
   /// Text and icon color when selected.
-  final Color? selectedTextColor;
+  final Color selectedTextColor;
 
   /// Background color for disabled tiles.
-  final Color? disabledTileBackgroundColor;
+  final Color disabledTileBackgroundColor;
 
   /// Text and icon color for disabled tiles.
-  final Color? disabledTextColor;
+  final Color disabledTextColor;
 
   /// Border color for disabled tiles.
-  final Color? disabledBorderColor;
+  final Color disabledBorderColor;
 
   /// Space around the optional icon inside the tile.
   final EdgeInsets? iconPadding;
@@ -435,4 +527,72 @@ class DateSelectorStyle {
     this.disabledBorderColor = Colors.grey,
     this.iconPadding = const EdgeInsets.all(8),
   });
+}
+
+class _TapScale extends StatefulWidget {
+  /// The child widget to display and animate (usually the date tile).
+  final Widget child;
+
+  /// Whether the tap-to-scale animation is enabled.
+  ///
+  /// If false, the wrapper simply calls `onTap` without playing the scale.
+  final bool enabled;
+
+  /// Callback invoked after the tap (and after animation completes when
+  /// `enabled` is true).
+  final VoidCallback? onTap;
+
+  /// Duration of the scale animation (forward + reverse use this controller's duration).
+  final Duration scaleDuration;
+  const _TapScale({
+    required this.child,
+    this.enabled = true,
+    this.onTap,
+    required this.scaleDuration,
+  });
+
+  @override
+  State<_TapScale> createState() => _TapScaleState();
+}
+
+class _TapScaleState extends State<_TapScale>
+    with SingleTickerProviderStateMixin {
+  /// Animation controller that drives the scale animation.
+  late final AnimationController _c;
+
+  /// Scale animation from 1.0 → 1.12 (or configured tween).
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _c = AnimationController(vsync: this, duration: widget.scaleDuration);
+    _scale = Tween<double>(
+      begin: 1.0,
+      end: 1.12,
+    ).animate(CurvedAnimation(parent: _c, curve: Curves.easeOut));
+  }
+
+  Future<void> _play() async {
+    if (!widget.enabled) return widget.onTap?.call();
+    await _c.forward();
+    await _c.reverse();
+    widget.onTap?.call();
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    onTap: _play,
+    child: AnimatedBuilder(
+      animation: _scale,
+      builder: (_, child) => Transform.scale(scale: _scale.value, child: child),
+      child: widget.child,
+    ),
+  );
 }

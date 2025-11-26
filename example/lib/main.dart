@@ -29,8 +29,17 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  List<DateTime> dates = [];
+
   @override
   Widget build(BuildContext context) {
+    for (int i = 0; i < 30; i++) {
+      DateTime date = DateTime.now().add(Duration(days: i));
+
+      if (date.weekday == 7 || date.weekday == 6) {
+        dates.add(date);
+      }
+    }
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -53,23 +62,23 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 SizedBox(
                   width: MediaQuery.sizeOf(context).width,
-                  height: 80,
-                  child: LinearDateSelector.builder(
-                    itemCount: 20,
+                  height: 100,
+                  child: LinearDateSelector(
+                    itemCount: 30,
                     axis: Axis.horizontal,
                     itemWidth: 80,
+                    listPadding: EdgeInsets.all(8),
                     style: DateSelectorStyle(
                       selectedTextColor: Colors.blue,
                       selectedTileBackgroundColor: Colors.blue.shade50,
                       selectedBorderColor: Colors.blue,
-                      disabledTileBackgroundColor: Colors.grey.shade300,
+                      disabledTileBackgroundColor: Colors.red.shade50,
+                      disabledBorderColor: Colors.redAccent,
+                      disabledTextColor: Colors.red,
                       borderColor: Colors.grey.shade400,
                       tileBackgroundColor: Colors.white,
                     ),
-                    disabledDateTimes: [
-                      DateTime.now(),
-                      DateTime.now().add(const Duration(days: 4)),
-                    ],
+                    disabledDateTimes: dates,
                     onDateTimeSelected: (d) => print('selected $d'),
                     todaysDateTime: DateTime.now(),
                   ),
@@ -84,10 +93,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 SizedBox(
                   width: MediaQuery.sizeOf(context).width,
                   height: 100,
-                  child: LinearDateSelector.builder(
+                  child: LinearDateSelector(
                     itemCount: 20,
                     axis: Axis.horizontal,
+                    enableClickAnimation: false,
+                    enableColorAnimation: true,
                     itemWidth: 120,
+                    icon: Icon(Icons.calendar_month),
+                    iconAlignment: LinearDateSelectorIconAlignment.left,
                     style: DateSelectorStyle(
                       selectedTextColor: Colors.blue,
                       selectedTileBackgroundColor: Colors.blue.shade50,
@@ -101,8 +114,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     ],
                     onDateTimeSelected: (d) => print('selected $d'),
                     todaysDateTime: DateTime.now(),
-                    iconAlignment: LinearDateSelectorIconAlignment.left,
-                    icon: Icon(Icons.calendar_month),
                   ),
                 ),
               ],
@@ -122,8 +133,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 SizedBox(
                   width: 80,
                   height: 500,
-                  child: LinearDateSelector.builder(
+                  child: LinearDateSelector(
                     itemCount: 20,
+                    enableClickAnimation: false,
                     axis: Axis.vertical,
                     itemWidth: 80,
                     itemHeight: 100,
@@ -144,14 +156,18 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 const SizedBox(width: 24),
+                //Default with Icon (Vertical)
                 SizedBox(
-                  width: 80,
+                  width: 100,
                   height: 500,
-                  child: LinearDateSelector.builder(
+                  child: LinearDateSelector(
                     itemCount: 20,
                     axis: Axis.vertical,
                     itemWidth: 80,
                     itemHeight: 100,
+                    enableClickAnimation: true,
+                    enableColorAnimation: true,
+                    listPadding: EdgeInsets.all(8),
                     style: DateSelectorStyle(
                       selectedTextColor: Colors.blue,
                       selectedTileBackgroundColor: Colors.blue.shade50,
@@ -195,7 +211,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     onDateTimeSelected: (d) => print('selected $d'),
                     itemBuilder:
                         (context, date, isSelected, isDisabled, index, _) {
-                          return Container(
+                          double _scale = 1.0;
+
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
                             margin: const EdgeInsets.symmetric(
                               horizontal: 6,
                               vertical: 8,
@@ -239,6 +258,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ],
             ),
+
+            const SizedBox(height: 16),
           ],
         ),
       ),
