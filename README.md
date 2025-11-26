@@ -10,9 +10,10 @@ A lightweight, customizable horizontal/vertical date selector widget for Flutter
 
 ## Screenshots
 
-![Screenshot 1](screenshots/default_horizontal.gif)
-![Screenshot 2](screenshots/default_vertical.gif)
-![Screenshot 3](screenshots/custom_date_selector.gif)
+| ![](screenshots/default_horizontal.gif) | ![](screenshots/default_vertical.gif) | ![](screenshots/custom_date_selector.gif) |
+| :-------------------------------------: | :-----------------------------------: | :---------------------------------------: |
+
+| **Default (Horizontal)** | **Default (Vertical)** | **Custom Tiles (Horizontal)** |
 
 ## ✨ Features
 
