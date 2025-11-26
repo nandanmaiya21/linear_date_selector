@@ -1,7 +1,8 @@
 name: linear_date_selector
 description: "A new Flutter package project."
 version: 0.0.1
-homepage:
+homepage: https://github.com/nandanmaiya21/linear_date_selector/
+repository: https://github.com/nandanmaiya21/linear_date_selector/
 
 environment:
   sdk: ^3.10.0
@@ -24,7 +25,7 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
+  uses-material-design: true
   # To add assets to your package, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
