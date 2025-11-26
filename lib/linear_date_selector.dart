@@ -72,7 +72,7 @@ class LinearDateSelector extends StatefulWidget {
   const LinearDateSelector({
     super.key,
     this.style = const DateSelectorStyle(),
-    required this.todaysDateTime,
+    required this.startDateTime,
     this.disabledDateTimes = const [],
     required this.onDateTimeSelected,
     this.itemCount = 4,
@@ -97,7 +97,7 @@ class LinearDateSelector extends StatefulWidget {
   const LinearDateSelector.builder({
     super.key,
     this.style = const DateSelectorStyle(),
-    required this.todaysDateTime,
+    required this.startDateTime,
     this.disabledDateTimes = const [],
     required this.onDateTimeSelected,
     this.itemCount = 4,
@@ -118,7 +118,7 @@ class LinearDateSelector extends StatefulWidget {
   /// Starting date from where the list begins.
   ///
   /// Item at index `0` will be this date.
-  final DateTime todaysDateTime;
+  final DateTime startDateTime;
 
   /// Callback triggered when any date is tapped.
   ///
@@ -253,7 +253,7 @@ class _LinearDateSelectorState extends State<LinearDateSelector> {
 
     _dates = List.generate(
       widget.itemCount,
-      (i) => widget.todaysDateTime.add(Duration(days: i)),
+      (i) => widget.startDateTime.add(Duration(days: i)),
     );
     _disabledDateKeys = widget.disabledDateTimes
         .map((d) => '${d.year}-${d.month}-${d.day}')
@@ -311,7 +311,7 @@ class _LinearDateSelectorState extends State<LinearDateSelector> {
               selectedIndex = index;
             });
             widget.onDateTimeSelected(
-              widget.todaysDateTime.add(Duration(days: index)),
+              widget.startDateTime.add(Duration(days: index)),
             );
           },
           child: SizedBox(

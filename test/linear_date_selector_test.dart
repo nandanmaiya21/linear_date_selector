@@ -16,7 +16,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: LinearDateSelector(
-              todaysDateTime: baseDate,
+              startDateTime: baseDate,
               itemCount: 5,
               itemWidth: 80,
               onDateTimeSelected: (_) {},
@@ -47,7 +47,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: LinearDateSelector(
-              todaysDateTime: baseDate,
+              startDateTime: baseDate,
               itemCount: 3,
               itemWidth: 80,
               onDateTimeSelected: (dt) => selected.add(dt),
@@ -87,7 +87,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: LinearDateSelector(
-              todaysDateTime: baseDate,
+              startDateTime: baseDate,
               itemCount: 4,
               itemWidth: 80,
               disabledDateTimes: disabled,
@@ -114,7 +114,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: LinearDateSelector.builder(
-              todaysDateTime: baseDate,
+              startDateTime: baseDate,
               itemCount: 3,
               onDateTimeSelected: (_) {},
               itemBuilder:
@@ -147,7 +147,7 @@ void main() {
           MaterialApp(
             home: Scaffold(
               body: LinearDateSelector(
-                todaysDateTime: baseDate,
+                startDateTime: baseDate,
                 itemCount: 1,
                 itemWidth: 80,
                 listPadding: EdgeInsets.all(8),
@@ -166,7 +166,7 @@ void main() {
     test('throws assertion error when itemCount is 0', () {
       expect(
         () => LinearDateSelector(
-          todaysDateTime: DateTime(2025, 1, 1),
+          startDateTime: DateTime(2025, 1, 1),
           itemCount: 0,
           onDateTimeSelected: (_) {},
         ),
@@ -182,7 +182,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: LinearDateSelector(
-              todaysDateTime: baseDate,
+              startDateTime: baseDate,
               itemCount: 1,
               itemWidth: 80,
               enableClickAnimation: true,
@@ -270,7 +270,7 @@ void main() {
           MaterialApp(
             home: Scaffold(
               body: LinearDateSelector(
-                todaysDateTime: baseDate,
+                startDateTime: baseDate,
                 itemCount: 1,
                 itemWidth: 80,
                 enableClickAnimation: false,
@@ -300,7 +300,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: LinearDateSelector(
-              todaysDateTime: baseDate,
+              startDateTime: baseDate,
               itemCount: 1,
               itemWidth: 80,
               enableColorAnimation: true,
@@ -331,7 +331,7 @@ void main() {
           MaterialApp(
             home: Scaffold(
               body: LinearDateSelector(
-                todaysDateTime: baseDate,
+                startDateTime: baseDate,
                 itemCount: 1,
                 itemWidth: 80,
                 enableColorAnimation: false,
@@ -361,7 +361,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: LinearDateSelector(
-              todaysDateTime: baseDate,
+              startDateTime: baseDate,
               itemCount: 1,
               itemWidth: 80,
               disabledDateTimes: [disabledDate],
@@ -397,7 +397,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: LinearDateSelector(
-              todaysDateTime: baseDate,
+              startDateTime: baseDate,
               itemCount: 1,
               itemWidth: 80,
               listPadding: EdgeInsets.all(8),

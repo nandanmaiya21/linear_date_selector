@@ -2,25 +2,28 @@
 
 A lightweight, customizable horizontal/vertical date selector widget for Flutter.
 
-`linear_date_selector` provides a simple, robust UI for showing a linear sequence of dates (for example: today + next N days) with built-in selection and disabled-date support — while also allowing a fully custom tile builder similar to `ListView.builder`.
+`linear_date_selector` provides a simple, robust UI for displaying a linear sequence of dates (e.g., today + next N days) with built-in selection, disabled-date support, animations, and a fully custom tile builder—similar to `ListView.builder`.
 
 ---
 
-## Features
+## ✨ Features
 
-- Auto-generated date list starting from a provided `todaysDateTime`.
-- Horizontal or vertical scrolling.
-- Default, polished tile UI out of the box.
-- Fully-customizable tile rendering with `LinearDateSelector.builder(...)`.
-- Disable specific dates to make them non-selectable.
-- Optional icon with flexible alignment: `top`, `bottom`, `left`, `right`.
-- Simple API and small footprint — no heavy calendar dependency.
+- Auto-generated date list starting from a provided `todaysDateTime`
+- Horizontal or vertical scrolling
+- Default, polished tile UI out of the box
+- Fully customizable tiles with `LinearDateSelector.builder(...)`
+- Disable specific dates (non-selectable)
+- Optional icon with flexible alignment: `top`, `bottom`, `left`, `right`
+- **Tap scale (click) animation**
+- **Optional background and text color animations**
+- Customizable animation durations
+- Simple API and small footprint — no heavy calendar widgets
 
 ---
 
-## Getting started
+## 🚀 Getting started
 
-Add the package to your `pubspec.yaml` (when published on pub.dev):
+Add to your `pubspec.yaml` after publishing:
 
 ```yaml
 dependencies:
@@ -37,6 +40,8 @@ flutter pub get
 
 ## Usage
 
+Important: this package's constructors use startDateTime (item index 0 == startDateTime).
+
 ### Default tiles (quick start)
 
 ```dart
@@ -45,18 +50,23 @@ import 'package:linear_date_selector/linear_date_selector.dart';
 
 // inside a widget build
 LinearDateSelector(
-  todaysDateTime: DateTime.now(),
+  startDateTime: DateTime.now(),
   itemCount: 7,
   onDateTimeSelected: (selected) {
     print('selected: $selected');
   },
-  // optional
+  // optional: an icon shown inside each tile
   icon: Icon(Icons.event),
   iconAlignment: LinearDateSelectorIconAlignment.bottom,
+  // optional sizing
+  itemWidth: 72,
+  itemHeight: 80,
 );
 ```
 
 ### Custom builder (full control)
+
+Use `.builder` to get (context, date, isSelected, isDisabled, index, style) and return any widget:
 
 ```dart
 LinearDateSelector.builder(
@@ -101,18 +111,24 @@ LinearDateSelector.builder(
 
 Constructors:
 
-- `LinearDateSelector(...)` — defaults with built-in tile UI.
-- `LinearDateSelector.builder(...)` — use a custom `itemBuilder`.
+- `LinearDateSelector(...)`— default tiles and optional animations.
+- `LinearDateSelector.builder(...)` — accept a custom `itemBuilder` function.
 
 Important properties:
 
-- `todaysDateTime` — `DateTime` where the list starts (index 0).
+- `startDateTime` — `DateTime` where the list starts (index 0).
 - `onDateTimeSelected` — `Function(DateTime)` callback when a date is chosen.
 - `disabledDateTimes` — `List<DateTime>` of dates that should be rendered disabled.
 - `itemCount` — number of tiles to show (must be > 0).
 - `axis` — `Axis.horizontal` (default) or `Axis.vertical`.
 - `itemWidth`, `itemHeight` — optional size of each tile.
 - `icon`, `iconAlignment` — optional icon and position.
+- `listPadding` — padding around the scrollable list.
+- `enableClickAnimation` — whether tap-scale animation is enabled (default `true`).
+- `scaleAnimationDuration` — duration for the tap-scale animation.
+- `enableColorAnimation` — enables background/text color animation for default tiles.
+- `backgroundColorChangeDuration`, `textColorChangeDuration` — durations for color animations (used by the default tile implementation).
+
 - `itemBuilder` — `Widget Function(BuildContext context, DateTime date, bool isSelected, bool isDisabled, int index, DateSelectorStyle style)?` for fully-custom tile rendering.
 
 ### `DateSelectorStyle`
@@ -120,6 +136,22 @@ Important properties:
 A simple style holder to customize tile colors, border colors and icon padding. Pass it into the widget's `style:` parameter to tweak the default tile appearance.
 
 ---
+
+```dart
+class DateSelectorStyle {
+  final Color tileBackgroundColor;
+  final Color selectedTileBackgroundColor;
+  final Color borderColor;
+  final Color selectedBorderColor;
+  final Color selectedTextColor;
+  final Color disabledTileBackgroundColor;
+  final Color disabledTextColor;
+  final Color disabledBorderColor;
+  final EdgeInsets? iconPadding;
+  const DateSelectorStyle({...});
+}
+
+```
 
 ## Example: disabling dates
 
@@ -139,13 +171,27 @@ LinearDateSelector(
 );
 ```
 
----
+## Accessibility & Tips
 
-## Tips & Gotchas
+- Consider wrapping your custom builder tile in `Semantics` to expose `selected` / `disabled` to screen readers.
 
-- `itemCount` must be > 0 — otherwise an assert will fail.
-- `disabledDateTimes` is matched by day/month/year. Time components are ignored.
-- `selectedIndex` is stored locally in the widget state. If you need external control of selection, wrap the selector and use the `onDateTimeSelected` callback to synchronize selection state.
+- The default tile uses `AnimatedContainer` and `AnimatedDefaultTextStyle` to animate color changes when `enableColorAnimation` is true.
+
+- For timezone-sensitive apps, normalize dates to avoid surprising disabled/selected behavior.
+
+- If you want the selector to start with a tile pre-selected, coordinate the initial selection via the parent: call `onDateTimeSelected` after widget build or extend the widget to accept an `initialSelectedDate` parameter.
+
+## Behavior & Notes
+
+- `itemCount` must be > 0 — an assert will fail in debug if it's not.
+
+- `disabledDateTimes` are matched by calendar day (year-month-day). Time components are ignored, so `DateTime(2025, 12, 1, 0, 0)` and `DateTime(2025, 12, 1, 13, 0)` refer to the same disabled date.
+
+- Selection state (`selectedIndex`) is stored locally inside the widget. Use `onDateTimeSelected` to communicate selection to parent widgets and keep external state in sync if needed.
+
+- The widget precomputes the list of consecutive dates for performance. If you update `startDateTime`, `itemCount`, or `disabledDateTimes`, the selector will recompute its internal lists (so changes are reflected).
+
+- If you use different `DateTime` timezones or pass dates with time components, you may want to normalize them (e.g., to local midnight or UTC) before passing to disabledDateTimes for predictable comparisons.
 
 ---
 
@@ -163,12 +209,13 @@ When contributing, please:
 ## Changelog
 
 - 0.0.1 — Initial release: default tiles, builder API, disabled-date support.
+- Recomputes internal lists when important inputs change.
 
 ---
 
 ## License
 
-This project is provided under the BSD-3-Clause / MIT style license (replace with your preferred license). Please update the license file in the repository accordingly.
+This package is distributed under the MIT [LICENSE](). See LICENSE for more information.
 
 ---
 
