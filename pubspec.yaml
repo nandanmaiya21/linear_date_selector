@@ -3,6 +3,7 @@ description: "A lightweight and customizable Flutter widget for selecting dates 
 version: 0.0.1
 homepage: https://github.com/nandanmaiya21/linear_date_selector/
 repository: https://github.com/nandanmaiya21/linear_date_selector/
+publisher: "https://pub.dev/publishers/nandanmaiya.in"
 
 environment:
   sdk: ^3.10.0
