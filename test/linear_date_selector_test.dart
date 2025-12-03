@@ -468,5 +468,194 @@ void main() {
             'Expected scale to return to 1.0 after animation, got $finalScale',
       );
     });
+    testWidgets('dateRange is inclusive (start..end both included)', (
+      WidgetTester tester,
+    ) async {
+      final start = DateTime(2025, 1, 1);
+      final end = DateTime(2025, 1, 3); // inclusive → 3 tiles: 01,02,03
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LinearDateSelector.dateRange(
+              startDateTime: start,
+              endDateTime: end,
+              itemWidth: 80,
+              onDateTimeSelected: (_) {},
+            ),
+          ),
+        ),
+      );
+
+      // Expect 3 date tiles with dd texts 01,02,03
+      for (var i = 0; i <= end.difference(start).inDays; i++) {
+        final dateString = DateFormat(
+          'dd',
+        ).format(start.add(Duration(days: i)));
+        expect(find.text(dateString), findsOneWidget);
+      }
+    });
+
+    testWidgets('dateRange normalizes time-of-day (partial-day case)', (
+      WidgetTester tester,
+    ) async {
+      // start at 23:00 and end at 01:00 next day — should yield two calendar days
+      final start = DateTime(2025, 12, 1, 23, 0);
+      final end = DateTime(2025, 12, 2, 1, 0);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LinearDateSelector.dateRange(
+              startDateTime: start,
+              endDateTime: end,
+              itemWidth: 80,
+              onDateTimeSelected: (_) {},
+            ),
+          ),
+        ),
+      );
+
+      // Expect two tiles: 01 and 02
+      expect(find.text('01'), findsOneWidget);
+      expect(find.text('02'), findsOneWidget);
+    });
+
+    testWidgets('dateRangeBuilder uses custom itemBuilder across the range', (
+      WidgetTester tester,
+    ) async {
+      final start = DateTime(2025, 6, 10);
+      final end = DateTime(2025, 6, 12); // inclusive -> 3 tiles
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LinearDateSelector.dateRangeBuilder(
+              startDateTime: start,
+              endDateTime: end,
+
+              onDateTimeSelected: (_) {},
+              itemBuilder:
+                  (context, date, isSelected, isDisabled, index, style) {
+                    return Container(
+                      key: Key('range_custom_$index'),
+                      child: Text('RANGE ${DateFormat('dd').format(date)}'),
+                    );
+                  },
+            ),
+          ),
+        ),
+      );
+
+      // Should find three custom keys and three custom texts
+      for (var i = 0; i < 3; i++) {
+        expect(find.byKey(Key('range_custom_$i')), findsOneWidget);
+      }
+      expect(find.textContaining('RANGE'), findsNWidgets(3));
+    });
+
+    testWidgets(
+      'dateRange regenerates when widget is rebuilt with new start/end (smoke)',
+      (WidgetTester tester) async {
+        // Start with 1..3
+        final startA = DateTime(2025, 4, 1);
+        final endA = DateTime(2025, 4, 3);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: LinearDateSelector.dateRange(
+                startDateTime: startA,
+                endDateTime: endA,
+                itemWidth: 80,
+                onDateTimeSelected: (_) {},
+              ),
+            ),
+          ),
+        );
+
+        // Ensure initial date '01' exists
+        expect(find.text('01'), findsOneWidget);
+        expect(find.text('03'), findsOneWidget);
+
+        // Rebuild with shifted range 2025-04-05 .. 2025-04-06
+        final startB = DateTime(2025, 4, 5);
+        final endB = DateTime(2025, 4, 6);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: LinearDateSelector.dateRange(
+                startDateTime: startB,
+                endDateTime: endB,
+                itemWidth: 80,
+                onDateTimeSelected: (_) {},
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Old dates should no longer be present; new dates should be present
+        expect(find.text('01'), findsNothing);
+        expect(find.text('05'), findsOneWidget);
+        expect(find.text('06'), findsOneWidget);
+      },
+    );
+
+    test(
+      'dateRange constructor asserts when end is before start (calendar day)',
+      () {
+        // end before start on calendar day -> should assert
+        final start = DateTime(2025, 7, 10, 10);
+        final end = DateTime(2025, 7, 9, 23);
+
+        expect(
+          () => LinearDateSelector.dateRange(
+            startDateTime: start,
+            endDateTime: end,
+            onDateTimeSelected: (_) {},
+          ),
+          throwsA(isA<AssertionError>()),
+        );
+      },
+    );
+
+    testWidgets('dateRange respects disabledDateTimes in the range', (
+      WidgetTester tester,
+    ) async {
+      final start = DateTime(2025, 9, 1);
+      final end = DateTime(2025, 9, 3); // 3 tiles total
+      final disabled = [DateTime(2025, 9, 2)];
+
+      final selected = <DateTime>[];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LinearDateSelector.dateRange(
+              startDateTime: start,
+              endDateTime: end,
+              itemWidth: 80,
+              disabledDateTimes: disabled,
+              onDateTimeSelected: (dt) => selected.add(dt),
+            ),
+          ),
+        ),
+      );
+
+      // Tap the disabled middle tile (02)
+      final disabledText = DateFormat('dd').format(disabled.first);
+      expect(find.text(disabledText), findsOneWidget);
+
+      await tester.tap(find.text(disabledText));
+      await tester.pumpAndSettle();
+
+      expect(
+        selected,
+        isEmpty,
+        reason: 'Tapping a disabled tile must not trigger the callback.',
+      );
+    });
   });
 }

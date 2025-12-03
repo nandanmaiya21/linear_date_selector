@@ -3,27 +3,39 @@ import 'package:intl/intl.dart';
 
 /// ---------------------------------------------------------------------------
 /// LinearDateSelector
-/// A customizable horizontal/vertical date selector widget for Flutter.
+/// A customizable horizontal or vertical **linear date selector** for Flutter.
 ///
 /// This widget displays a sequential list of dates starting from a given
-/// `startDateTime`. It supports both **default UI tiles** and a
-/// **fully customizable builder** (similar to `ListView.builder`), allowing
-/// developers to design their own date tiles.
+/// `startDateTime`. It supports:
 ///
+/// - the built-in **default tile UI**, or
+/// - a fully customizable tile via a `builder` (similar to `ListView.builder`)
+///
+/// giving developers complete freedom to design date tiles that match the
+/// style and requirements of their apps.
+///
+/// ---------------------------------------------------------------------------
 /// ## Features
-/// - Auto-generated date list starting from `startDateTime`
-/// - Horizontal or vertical scrolling using ListView
-/// - Customizable appearance via `DateSelectorStyle`
-/// - Ability to disable specific dates
-/// - Built-in selection state management
-/// - Optional icon with adjustable alignment (top, bottom, left, right)
-/// - Fully customizable tile rendering using:
-///   ```dart
-///   LinearDateSelector.builder(...)
-///   ```
 ///
+/// - Auto-generated date list starting from `startDateTime`
+/// - Optional **calendar date-range mode** (inclusive)
+/// - Horizontal or vertical scrolling using `ListView`
+/// - Customizable appearance via `DateSelectorStyle`
+/// - Disable specific dates
+/// - Built-in selection state management
+/// - Optional icon with adjustable alignment (top / bottom / left / right)
+/// - Tap-scale animation on selection
+/// - Smooth background & text color animations
+/// - Fully customizable tile rendering using:
+///
+/// ```dart
+/// LinearDateSelector.builder(...)
+/// ```
+///
+/// ---------------------------------------------------------------------------
 /// ## Custom Item Builder
-/// Pass your own `itemBuilder` to fully control each tile:
+///
+/// Pass your own `itemBuilder` for full tile customization:
 ///
 /// ```dart
 /// LinearDateSelector.builder(
@@ -41,27 +53,55 @@ import 'package:intl/intl.dart';
 /// );
 /// ```
 ///
-/// ### Role of `index` in itemBuilder
-/// The `index` tells you:
-/// - Which item is being built
-/// - Helps you apply custom styling for first/last items
-/// - Lets you add animation or unique layout patterns
-/// - Helps with debugging or logging
+/// ### Role of `index` in `itemBuilder`
+/// The `index` helps you:
+/// - Know which tile is being built
+/// - Apply unique styling to first/last items
+/// - Add animations or staggered effects
+/// - Implement special logic (weekends, markers, separators)
+/// - Ease debugging & logging
 ///
+/// ---------------------------------------------------------------------------
 /// ## When to Use This Widget
-/// - Calendar pickers
-/// - Appointment selectors
-/// - Delivery date options
-/// - Horizontal date scrollers
-/// - Any UI that needs simple or fully-customizable date selection
 ///
+/// Use `LinearDateSelector` when you need:
+///
+/// - Lightweight calendar-style pickers
+/// - Appointment or delivery date selectors
+/// - Horizontal or vertical date scrollers
+/// - Timeline-style date UIs
+/// - A customizable date strip without heavy calendar packages
+///
+/// ---------------------------------------------------------------------------
+/// ## Constructor Options
+///
+/// ### 1. `LinearDateSelector` (default)
+/// Build a fixed number of sequential dates using the built-in tile UI.
+///
+/// ### 2. `LinearDateSelector.builder`
+/// Custom renderer for each tile — total control over UI.
+///
+/// ### 3. `LinearDateSelector.dateRange`
+/// Inclusive date-range selector (default tile UI).
+/// Time-of-day values are ignored; only calendar days matter.
+///
+/// ### 4. `LinearDateSelector.dateRangeBuilder`
+/// A date-range version that also uses a custom `itemBuilder`.
+///
+/// ---------------------------------------------------------------------------
 /// ## Author Notes
-/// Designed for flexibility, easy customization, and clean UI.
-/// Perfect for apps needing lightweight date selection without heavy calendar packages.
+///
+/// `LinearDateSelector` is designed for:
+/// - flexibility
+/// - clean UI
+/// - easy customization
+///
+/// Perfect for apps needing a lightweight date picker without the overhead of
+/// a full calendar widget.
 ///
 /// ---------------------------------------------------------------------------
 ///
-/// Below starts the actual implementation.
+/// Below begins the actual implementation.
 /// ---------------------------------------------------------------------------
 
 /// Alignment options for the optional icon inside each date tile.
@@ -90,12 +130,14 @@ class LinearDateSelector extends StatefulWidget {
     this.physics,
     this.controller,
   }) : itemBuilder = null,
+       endDateTime = null,
        assert(itemCount > 0, 'itemCount must be greater than 0');
 
   /// Creates a date selector using your custom builder.
   ///
   /// Works like `ListView.builder`: you get `date`, `isSelected`,
   /// `isDisabled`, and `index` for maximum customization.
+  /// /// - A custom itemBuilder **must** be provided.
   const LinearDateSelector.builder({
     super.key,
     this.style = const DateSelectorStyle(),
@@ -106,7 +148,7 @@ class LinearDateSelector extends StatefulWidget {
     this.axis = Axis.horizontal,
     this.itemWidth,
     this.itemHeight,
-    this.itemBuilder,
+    required this.itemBuilder,
     this.listPadding = EdgeInsets.zero,
     this.enableClickAnimation = true,
     this.scaleAnimationDuration = const Duration(milliseconds: 120),
@@ -117,12 +159,145 @@ class LinearDateSelector extends StatefulWidget {
        textColorChangeDuration = null,
        backgroundColorChangeDuration = null,
        enableColorAnimation = false,
+       endDateTime = null,
        assert(itemCount > 0, 'itemCount must be greater than 0');
+
+  /// Creates a date selector for a continuous **calendar date range**, using the
+  /// widget’s **default tile UI**.
+  ///
+  /// This constructor is similar to `.range`, but it performs additional
+  /// protections to ensure the range is based on full calendar days rather than
+  /// exact timestamps.
+  ///
+  /// ### Key Behaviors
+  /// - Time-of-day values are stripped: only **year/month/day** are used.
+  /// - The `endDateTime` must represent a **later calendar day** than
+  ///   `startDateTime`, otherwise an assertion fails.
+  /// - The range is **inclusive**, meaning both the start and end dates
+  ///   produce tiles.
+  /// - `itemBuilder` is automatically set to `null`, so the widget uses the
+  ///   built-in default tile UI.
+  ///
+  /// Example:
+  /// `start = Jan 1` and `end = Jan 3` → tiles for Jan 1, Jan 2, Jan 3 (3 tiles).
+  LinearDateSelector.dateRange({
+    super.key,
+    this.style = const DateSelectorStyle(),
+    required this.startDateTime,
+    required this.endDateTime,
+    this.disabledDateTimes = const [],
+    required this.onDateTimeSelected,
+    this.axis = Axis.horizontal,
+    this.itemWidth,
+    this.itemHeight,
+    this.icon,
+    this.iconAlignment = LinearDateSelectorIconAlignment.bottom,
+    this.listPadding = EdgeInsets.zero,
+    this.enableClickAnimation = true,
+    this.textColorChangeDuration = const Duration(milliseconds: 200),
+    this.backgroundColorChangeDuration = const Duration(milliseconds: 200),
+    this.enableColorAnimation = false,
+    this.scaleAnimationDuration = const Duration(milliseconds: 120),
+    this.physics,
+    this.controller,
+  }) : itemBuilder = null,
+       assert(
+         endDateTime != null &&
+             DateTime(
+               endDateTime.year,
+               endDateTime.month,
+               endDateTime.day,
+             ).isAfter(
+               DateTime(
+                 startDateTime.year,
+                 startDateTime.month,
+                 startDateTime.day,
+               ),
+             ),
+         'endDateTime must be after startDateTime (based on calendar date)',
+       ),
+
+       // Compute itemCount using calendar-day difference (inclusive).
+       itemCount =
+           DateTime(endDateTime!.year, endDateTime.month, endDateTime.day)
+               .difference(
+                 DateTime(
+                   startDateTime.year,
+                   startDateTime.month,
+                   startDateTime.day,
+                 ),
+               )
+               .inDays +
+           1;
+
+  /// Creates a date selector for a calendar range **with a custom itemBuilder**.
+  ///
+  /// This constructor is similar to `.builder`, except that you specify
+  /// both `startDateTime` and `endDateTime`, and the widget automatically
+  /// computes the number of calendar days in the range.
+  ///
+  /// Notes:
+  /// - Time-of-day values are ignored. Only **calendar dates** matter.
+  /// - The range is **inclusive** of both start and end dates.
+  ///   Example: Jan 1 → Jan 3 produces 3 tiles.
+  /// - A custom itemBuilder **must** be provided.
+  LinearDateSelector.dateRangeBuilder({
+    super.key,
+    this.style = const DateSelectorStyle(),
+    required this.startDateTime,
+    required this.endDateTime,
+    this.disabledDateTimes = const [],
+    required this.onDateTimeSelected,
+    this.axis = Axis.horizontal,
+    this.itemWidth,
+    this.itemHeight,
+    this.icon,
+    this.iconAlignment = LinearDateSelectorIconAlignment.bottom,
+    this.listPadding = EdgeInsets.zero,
+    this.enableClickAnimation = true,
+    this.textColorChangeDuration = const Duration(milliseconds: 200),
+    this.backgroundColorChangeDuration = const Duration(milliseconds: 200),
+    this.enableColorAnimation = false,
+    this.scaleAnimationDuration = const Duration(milliseconds: 120),
+    this.physics,
+    this.controller,
+    required this.itemBuilder,
+  }) : assert(
+         endDateTime != null &&
+             DateTime(
+               endDateTime.year,
+               endDateTime.month,
+               endDateTime.day,
+             ).isAfter(
+               DateTime(
+                 startDateTime.year,
+                 startDateTime.month,
+                 startDateTime.day,
+               ),
+             ),
+         'endDateTime must be after startDateTime (based on calendar date)',
+       ),
+
+       // Compute itemCount using calendar-day difference (inclusive).
+       itemCount =
+           DateTime(endDateTime!.year, endDateTime.month, endDateTime.day)
+               .difference(
+                 DateTime(
+                   startDateTime.year,
+                   startDateTime.month,
+                   startDateTime.day,
+                 ),
+               )
+               .inDays +
+           1;
 
   /// Starting date from where the list begins.
   ///
   /// Item at index `0` will be this date.
   final DateTime startDateTime;
+
+  /// Ending date from where the list ends. (Optional)
+  final DateTime? endDateTime;
 
   /// Callback triggered when any date is tapped.
   ///
@@ -246,28 +421,71 @@ class _LinearDateSelectorState extends State<LinearDateSelector> {
   static final DateFormat _dateFmt = DateFormat('dd');
   static final DateFormat _monthFmt = DateFormat('MMM');
 
-  /// Precomputed list of consecutive dates shown by the selector.
-  ///
-  /// Built in `initState` (and refreshed in `didUpdateWidget` when inputs
-  /// change). Avoids recreating DateTime instances on every build.
-  late final List<DateTime> _dates;
+  /// Precomputed list of consecutive date-only DateTimes shown by the selector.
+  /// Regenerated in initState and didUpdateWidget when inputs change.
+  late List<DateTime> _dates;
 
   /// Set of string keys for fast disabled-date lookup.
   ///
   /// Each key is `'yyyy-M-d'`. Using a Set makes `isDisabled` checks O(1).
-  late final Set<String> _disabledDateKeys;
+  late Set<String> _disabledDateKeys;
+
+  /// Helper: convert a DateTime to date-only (local calendar day).
+  DateTime _dateOnly(DateTime d) {
+    final local = d.toLocal();
+    return DateTime(local.year, local.month, local.day);
+  }
+
+  /// Compute total calendar days for the range (inclusive).
+  /// If [end] is null, return [fallbackItemCount].
+  int _computeTotalDays(DateTime start, DateTime? end, int fallbackItemCount) {
+    if (end == null) return fallbackItemCount;
+    final startDateOnly = _dateOnly(start);
+    final endDateOnly = _dateOnly(end);
+    final days = endDateOnly.difference(startDateOnly).inDays + 1; // inclusive
+    return days > 0 ? days : 0;
+  }
+
+  /// Generate the `_dates` list and `_disabledDateKeys` based on current widget.
+  void _generateDates() {
+    final totalDays = _computeTotalDays(
+      widget.startDateTime,
+      widget.endDateTime,
+      widget.itemCount,
+    );
+    final base = _dateOnly(widget.startDateTime);
+
+    _dates = List.generate(totalDays, (i) => base.add(Duration(days: i)));
+
+    _disabledDateKeys = widget.disabledDateTimes
+        .map((d) => _dateOnly(d))
+        .map((dd) => '${dd.year}-${dd.month}-${dd.day}')
+        .toSet();
+
+    // If previously selected index is now out of range, reset it.
+    if (selectedIndex >= _dates.length) {
+      selectedIndex = -1;
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    _generateDates();
+  }
 
-    _dates = List.generate(
-      widget.itemCount,
-      (i) => widget.startDateTime.add(Duration(days: i)),
-    );
-    _disabledDateKeys = widget.disabledDateTimes
-        .map((d) => '${d.year}-${d.month}-${d.day}')
-        .toSet();
+  @override
+  void didUpdateWidget(covariant LinearDateSelector oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Regenerate dates when relevant inputs change.
+    // Compare the raw objects — this is sufficient for most cases.
+    if (oldWidget.startDateTime != widget.startDateTime ||
+        oldWidget.endDateTime != widget.endDateTime ||
+        oldWidget.itemCount != widget.itemCount ||
+        oldWidget.disabledDateTimes != widget.disabledDateTimes) {
+      _generateDates();
+    }
   }
 
   @override
@@ -275,7 +493,8 @@ class _LinearDateSelectorState extends State<LinearDateSelector> {
     return ListView.builder(
       padding: widget.listPadding,
       shrinkWrap: true,
-      itemCount: widget.itemCount,
+      // Use the generated list as the single source of truth.
+      itemCount: _dates.length,
       physics: widget.physics,
       controller: widget.controller,
       scrollDirection: widget.axis,
@@ -314,17 +533,19 @@ class _LinearDateSelectorState extends State<LinearDateSelector> {
           );
         }
 
+        final scaleDuration =
+            widget.scaleAnimationDuration ?? const Duration(milliseconds: 120);
+
         return _TapScale(
           enabled: widget.enableClickAnimation,
-          scaleDuration: widget.scaleAnimationDuration!,
+          scaleDuration: scaleDuration,
           onTap: () {
             if (isDisabled) return;
             setState(() {
               selectedIndex = index;
             });
-            widget.onDateTimeSelected(
-              widget.startDateTime.add(Duration(days: index)),
-            );
+            // Use normalized date (from _dates) so callback gets date-only values.
+            widget.onDateTimeSelected(_dates[index]);
           },
           child: SizedBox(
             width: widget.itemWidth ?? 64,
@@ -348,10 +569,16 @@ class _LinearDateSelectorState extends State<LinearDateSelector> {
     final String day = _dateFmt.format(currElement);
     final String month = _monthFmt.format(currElement);
 
+    final bgDuration = widget.enableColorAnimation
+        ? (widget.backgroundColorChangeDuration ??
+              const Duration(milliseconds: 200))
+        : Duration.zero;
+    final textDuration = widget.enableColorAnimation
+        ? (widget.textColorChangeDuration ?? const Duration(milliseconds: 200))
+        : Duration.zero;
+
     return AnimatedContainer(
-      duration: widget.enableColorAnimation
-          ? widget.backgroundColorChangeDuration!
-          : Duration.zero,
+      duration: bgDuration,
       margin: EdgeInsets.symmetric(
         horizontal: widget.axis == Axis.horizontal ? 8 : 0,
         vertical: widget.axis == Axis.horizontal ? 0 : 8,
@@ -390,7 +617,6 @@ class _LinearDateSelectorState extends State<LinearDateSelector> {
                 child: widget.icon!,
               ),
             ),
-
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -412,9 +638,7 @@ class _LinearDateSelectorState extends State<LinearDateSelector> {
                 ),
               //day text
               AnimatedDefaultTextStyle(
-                duration: widget.enableColorAnimation
-                    ? widget.textColorChangeDuration!
-                    : Duration.zero,
+                duration: textDuration,
                 style: TextStyle(
                   fontSize: 14,
                   color: isDisabled
@@ -428,9 +652,7 @@ class _LinearDateSelectorState extends State<LinearDateSelector> {
               const SizedBox(height: 2),
               //date text
               AnimatedDefaultTextStyle(
-                duration: widget.enableColorAnimation
-                    ? widget.textColorChangeDuration!
-                    : Duration.zero,
+                duration: textDuration,
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
@@ -445,9 +667,7 @@ class _LinearDateSelectorState extends State<LinearDateSelector> {
               const SizedBox(height: 2),
               //month text
               AnimatedDefaultTextStyle(
-                duration: widget.enableColorAnimation
-                    ? widget.textColorChangeDuration!
-                    : Duration.zero,
+                duration: textDuration,
                 style: TextStyle(
                   fontSize: 12,
                   color: isDisabled

@@ -1,5 +1,8 @@
 # linear_date_selector 🔗
 
+[![pub version](https://img.shields.io/pub/v/linear_date_selector.svg)](https://pub.dev/packages/linear_date_selector)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A lightweight, customizable horizontal/vertical date selector widget for Flutter.
 
 `linear_date_selector` provides a simple, robust UI for displaying a linear sequence of dates (e.g., today + next N days) with built-in selection, disabled-date support, animations, and a fully custom tile builder—similar to `ListView.builder`.
@@ -149,6 +152,122 @@ LinearDateSelector.builder(
 
 ---
 
+### 📅 Date-range (default tiles)
+
+```dart
+
+LinearDateSelector.dateRange(
+  startDateTime: DateTime(2025, 1, 1),
+  endDateTime: DateTime(2025, 1, 7), // inclusive → 1,2,3,4,5,6,7
+
+  onDateTimeSelected: (selected) {
+    print('selected: $selected');
+  },
+
+  // optional extras
+  icon: const Icon(Icons.event),
+  iconAlignment: LinearDateSelectorIconAlignment.top,
+  itemWidth: 70,
+  itemHeight: 85,
+  enableColorAnimation: true,
+  listPadding: const EdgeInsets.symmetric(horizontal: 12),
+);
+
+```
+
+### 🎨 🧪 Date-range + custom builder (full control)
+
+```dart
+LinearDateSelector.dateRangeBuilder(
+  startDateTime: DateTime(2025, 2, 10),
+  endDateTime: DateTime(2025, 2, 15), // inclusive (6 days)
+
+  disabledDateTimes: [
+    DateTime(2025, 2, 12), // middle day disabled
+  ],
+
+  onDateTimeSelected: (selected) {
+    print('picked: $selected');
+  },
+
+  listPadding: const EdgeInsets.all(10),
+  axis: Axis.horizontal,
+  itemWidth: 90,
+  itemHeight: 120,
+
+  itemBuilder: (
+    context,
+    date,
+    isSelected,
+    isDisabled,
+    index,
+    style,
+  ) {
+    final day = DateFormat('dd').format(date);
+    final month = DateFormat('MMM').format(date);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      margin: const EdgeInsets.symmetric(horizontal: 6),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDisabled
+            ? Colors.grey.shade300
+            : (isSelected ? Colors.blue : Colors.white),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isSelected ? Colors.blue : Colors.grey.shade400,
+          width: 2,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            day,
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: isDisabled ? Colors.grey : Colors.black,
+            ),
+          ),
+          Text(
+            month,
+            style: TextStyle(
+              fontSize: 16,
+              color: isDisabled ? Colors.grey : Colors.black87,
+            ),
+          ),
+        ],
+      ),
+    );
+  },
+);
+
+```
+
+#### 📌 When to use:
+
+- You want different UI for weekdays vs weekends
+
+- You want animations, badges, chips, colors, shadows
+
+- UI designers give you custom Figma layouts
+
+- You need total control but want range logic for free
+
+---
+
+> **Note:** .`dateRange` and .`dateRangeBuilder` ignore hours and minutes in the given DateTimes.
+> Only the calendar day is used:
+
+```dart
+DateTime(2025, 1, 1, 23:00)
+→ treated as 2025-01-01
+```
+
+---
+
 ## API
 
 ### `LinearDateSelector`
@@ -157,10 +276,12 @@ Constructors:
 
 - `LinearDateSelector(...)`— default tiles and optional animations.
 - `LinearDateSelector.builder(...)` — accept a custom `itemBuilder` function.
+- `LinearDateSelector.dateRange(...)` — inclusive date-range selector (default tile UI). Time-of-day is ignored (dates are normalized to year/month/day). -`LinearDateSelector.dateRangeBuilder(...)` - Same as `dateRange`, but allows a fully custom `itemBuilder` for each date tile. Range generation is handled for you; you only render the tiles.
 
 Important properties:
 
 - `startDateTime` — `DateTime` where the list starts (index 0).
+- `endDateTime` — `DateTime` where the list ends (optional).
 - `onDateTimeSelected` — `Function(DateTime)` callback when a date is chosen.
 - `disabledDateTimes` — `List<DateTime>` of dates that should be rendered disabled.
 - `itemCount` — number of tiles to show (must be > 0).

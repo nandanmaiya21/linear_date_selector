@@ -85,6 +85,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ],
             ),
+
             const SizedBox(height: 16),
             //Default with Icon (Horizontal)
             Row(
@@ -390,6 +391,124 @@ class _MyHomePageState extends State<MyHomePage> {
               ],
             ),
 
+            const SizedBox(height: 16),
+            const Text(
+              "Date Range Selector",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            //Default (Horizontal) With Range
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: MediaQuery.sizeOf(context).width,
+                  height: 100,
+                  child: LinearDateSelector.dateRange(
+                    axis: Axis.horizontal,
+                    itemWidth: 80,
+                    listPadding: EdgeInsets.all(8),
+                    style: DateSelectorStyle(
+                      selectedTextColor: Colors.blue,
+                      selectedTileBackgroundColor: Colors.blue.shade50,
+                      selectedBorderColor: Colors.blue,
+                      disabledTileBackgroundColor: Colors.red.shade50,
+                      disabledBorderColor: Colors.redAccent,
+                      disabledTextColor: Colors.red,
+                      borderColor: Colors.grey.shade400,
+                      tileBackgroundColor: Colors.white,
+                    ),
+                    disabledDateTimes: dates,
+                    onDateTimeSelected: (d) => print('selected $d'),
+                    startDateTime: DateTime.now(),
+                    endDateTime: DateTime.now().add(Duration(days: 7)),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            //Custom Tiles (Horizontal) With Range
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: MediaQuery.sizeOf(context).width,
+                  height: 120,
+                  child: LinearDateSelector.dateRangeBuilder(
+                    listPadding: EdgeInsets.all(8),
+                    startDateTime: DateTime.now(),
+                    endDateTime: DateTime.now().add(Duration(days: 4)),
+                    itemHeight: 120,
+                    axis: Axis.horizontal,
+                    disabledDateTimes: [DateTime.now().add(Duration(days: 4))],
+                    onDateTimeSelected: (d) => print('selected $d'),
+                    itemBuilder:
+                        (context, date, isSelected, isDisabled, index, _) {
+                          double _scale = 1.0;
+
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isDisabled
+                                  ? Colors.grey.shade200
+                                  : (isSelected
+                                        ? Color(0xFF1e1405)
+                                        : Color(0xFFf8e9d7)),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: isDisabled
+                                    ? Colors.grey
+                                    : (isSelected
+                                          ? Color(0xFF1e1405)
+                                          : Color(0xFFf8e9d7)),
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Center(
+                                  child: Text.rich(
+                                    TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text:
+                                              DateFormat('dd').format(date) +
+                                              '\n',
+                                          style: TextStyle(fontSize: 28),
+                                        ),
+                                        TextSpan(
+                                          text: DateFormat(
+                                            'MMM\nyyyy',
+                                          ).format(date),
+                                          style: TextStyle(fontSize: 14),
+                                        ),
+                                      ],
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: isDisabled
+                                          ? Colors.grey
+                                          : (isSelected
+                                                ? Color(0xFFf8e9d7)
+                                                : Color(0xFF1e1405)),
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
+                                ),
+                                // CircleAvatar(backgroundColor: Colors.red),
+                              ],
+                            ),
+                          );
+                        },
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 16),
           ],
         ),
