@@ -39,7 +39,7 @@ Add to your `pubspec.yaml` after publishing:
 
 ```yaml
 dependencies:
-  linear_date_selector: ^0.0.1
+  linear_date_selector: ^<latest-version>
 ```
 
 Then run:
