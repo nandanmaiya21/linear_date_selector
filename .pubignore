@@ -1,0 +1,30 @@
+# Build outputs & caches (example app builds)
+example/build/
+example/.dart_tool/
+.example_build/
+
+# Dart/Flutter tool directories
+.dart_tool/
+.packages
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# IDE/editor
+.idea/
+.vscode/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Large example assets (if any)
+example/assets/
+
+# Other directories often accidentally committed
+.gradle/
+*.apk
+*.aab
+*.xcarchive
